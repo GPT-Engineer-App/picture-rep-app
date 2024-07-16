@@ -4,6 +4,7 @@ import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Notifications from "./pages/Notifications.jsx";
 import SettingsPage from "./pages/Settings.jsx";
+import TaskDetails from "./pages/TaskDetails.jsx";
 
 export const navItems = [
   {
@@ -35,5 +36,11 @@ export const navItems = [
     to: "/settings",
     icon: <Settings className="h-4 w-4" />,
     page: <SettingsPage />,
+  },
+  {
+    title: "Task Details",
+    to: "/task/:id",
+    icon: <List className="h-4 w-4" />,
+    page: <TaskDetails />,
   },
 ];

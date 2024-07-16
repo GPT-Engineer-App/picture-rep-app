@@ -1,6 +1,7 @@
 import React from 'react';
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Link } from 'react-router-dom';
 
 const TaskList = () => {
   const tasks = [
@@ -13,15 +14,17 @@ const TaskList = () => {
   return (
     <div className="space-y-4">
       {tasks.map((task) => (
-        <div key={task.id} className="flex items-center space-x-4 bg-white p-4 rounded-lg shadow">
-          <Checkbox checked={task.completed} />
-          <div className="flex-grow">
-            <p className={`font-medium ${task.completed ? 'line-through text-gray-500' : ''}`}>
-              {task.title}
-            </p>
+        <Link to={`/task/${task.id}`} key={task.id} className="block">
+          <div className="flex items-center space-x-4 bg-white p-4 rounded-lg shadow hover:bg-gray-50 transition-colors">
+            <Checkbox checked={task.completed} />
+            <div className="flex-grow">
+              <p className={`font-medium ${task.completed ? 'line-through text-gray-500' : ''}`}>
+                {task.title}
+              </p>
+            </div>
+            <Badge>{task.category}</Badge>
           </div>
-          <Badge>{task.category}</Badge>
-        </div>
+        </Link>
       ))}
     </div>
   );
