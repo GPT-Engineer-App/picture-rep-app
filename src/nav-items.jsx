@@ -2,6 +2,7 @@ import { Home, List, Bell, Settings } from "lucide-react";
 import Index from "./pages/Index.jsx";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import Notifications from "./pages/Notifications.jsx";
 
 export const navItems = [
   {
@@ -26,7 +27,7 @@ export const navItems = [
     title: "Notifications",
     to: "/notifications",
     icon: <Bell className="h-4 w-4" />,
-    page: <div>Notifications Page</div>,
+    page: <Notifications />,
   },
   {
     title: "Settings",
