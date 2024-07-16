@@ -1,6 +1,7 @@
 import { Home, List, Bell, Settings } from "lucide-react";
 import Index from "./pages/Index.jsx";
 import Login from "./pages/Login.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
 
 export const navItems = [
   {
@@ -16,10 +17,10 @@ export const navItems = [
     page: <Login />,
   },
   {
-    title: "Tasks",
-    to: "/tasks",
+    title: "Dashboard",
+    to: "/dashboard",
     icon: <List className="h-4 w-4" />,
-    page: <div>Tasks Page</div>,
+    page: <Dashboard />,
   },
   {
     title: "Notifications",
