@@ -3,6 +3,7 @@ import Index from "./pages/Index.jsx";
 import Login from "./pages/Login.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Notifications from "./pages/Notifications.jsx";
+import SettingsPage from "./pages/Settings.jsx";
 
 export const navItems = [
   {
@@ -33,6 +34,6 @@ export const navItems = [
     title: "Settings",
     to: "/settings",
     icon: <Settings className="h-4 w-4" />,
-    page: <div>Settings Page</div>,
+    page: <SettingsPage />,
   },
 ];
