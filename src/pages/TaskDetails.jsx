@@ -1,5 +1,5 @@
-import React from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,20 +11,97 @@ import { CalendarIcon, Clock, Tag } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useToast } from "@/components/ui/use-toast";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+const fetchTask = async (id) => {
+  const response = await fetch(`/api/tasks/${id}`);
+  if (!response.ok) {
+    throw new Error('Failed to fetch task');
+  }
+  return response.json();
+};
+
+const updateTask = async (taskData) => {
+  const response = await fetch(`/api/tasks/${taskData.id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(taskData),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to update task');
+  }
+  return response.json();
+};
 
 const TaskDetails = () => {
   const { id } = useParams();
-  const [date, setDate] = React.useState(new Date());
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Placeholder task data
-  const task = {
-    id,
-    title: "Complete project proposal",
-    description: "Write and submit the project proposal for the new client.",
+  const [taskData, setTaskData] = useState({
+    title: '',
+    description: '',
     dueDate: new Date(),
-    category: "Work",
+    category: '',
     completed: false,
+  });
+
+  const { data: task, isLoading, isError } = useQuery({
+    queryKey: ['task', id],
+    queryFn: () => fetchTask(id),
+  });
+
+  const updateTaskMutation = useMutation({
+    mutationFn: updateTask,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['task', id]);
+      toast({
+        title: "Task updated",
+        description: "Your task has been successfully updated.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update task. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  useEffect(() => {
+    if (task) {
+      setTaskData(task);
+    }
+  }, [task]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setTaskData(prev => ({ ...prev, [name]: value }));
   };
+
+  const handleCheckboxChange = (checked) => {
+    setTaskData(prev => ({ ...prev, completed: checked }));
+  };
+
+  const handleDateChange = (date) => {
+    setTaskData(prev => ({ ...prev, dueDate: date }));
+  };
+
+  const handleSave = () => {
+    updateTaskMutation.mutate(taskData);
+  };
+
+  const handleCancel = () => {
+    navigate('/dashboard');
+  };
+
+  if (isLoading) return <div>Loading...</div>;
+  if (isError) return <div>Error loading task</div>;
 
   return (
     <div className="container mx-auto p-6">
@@ -35,16 +112,30 @@ const TaskDetails = () => {
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="title">Title</Label>
-            <Input id="title" defaultValue={task.title} />
+            <Input
+              id="title"
+              name="title"
+              value={taskData.title}
+              onChange={handleInputChange}
+            />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
-            <Textarea id="description" defaultValue={task.description} />
+            <Textarea
+              id="description"
+              name="description"
+              value={taskData.description}
+              onChange={handleInputChange}
+            />
           </div>
 
           <div className="flex items-center space-x-2">
-            <Checkbox id="completed" checked={task.completed} />
+            <Checkbox
+              id="completed"
+              checked={taskData.completed}
+              onCheckedChange={handleCheckboxChange}
+            />
             <Label htmlFor="completed">Mark as completed</Label>
           </div>
 
@@ -57,18 +148,18 @@ const TaskDetails = () => {
                     variant={"outline"}
                     className={cn(
                       "w-full justify-start text-left font-normal",
-                      !date && "text-muted-foreground"
+                      !taskData.dueDate && "text-muted-foreground"
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {date ? format(date, "PPP") : <span>Pick a date</span>}
+                    {taskData.dueDate ? format(new Date(taskData.dueDate), "PPP") : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={date}
-                    onSelect={setDate}
+                    selected={new Date(taskData.dueDate)}
+                    onSelect={handleDateChange}
                     initialFocus
                   />
                 </PopoverContent>
@@ -87,13 +178,15 @@ const TaskDetails = () => {
             <Label>Category</Label>
             <Button variant="outline" className="w-full justify-start">
               <Tag className="mr-2 h-4 w-4" />
-              {task.category}
+              {taskData.category}
             </Button>
           </div>
 
           <div className="flex justify-end space-x-2">
-            <Button variant="outline">Cancel</Button>
-            <Button>Save Changes</Button>
+            <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+            <Button onClick={handleSave} disabled={updateTaskMutation.isLoading}>
+              {updateTaskMutation.isLoading ? 'Saving...' : 'Save Changes'}
+            </Button>
           </div>
         </CardContent>
       </Card>
