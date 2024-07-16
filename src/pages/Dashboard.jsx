@@ -2,10 +2,17 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus } from "lucide-react";
+import { Plus, List, Grid } from "lucide-react";
 import TaskList from '../components/TaskList';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 const fetchCategories = async () => {
   const response = await fetch('/api/categories');
@@ -31,6 +38,8 @@ const addTask = async (taskData) => {
 
 const Dashboard = () => {
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [viewMode, setViewMode] = useState('list');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -60,7 +69,7 @@ const Dashboard = () => {
 
   const handleAddTask = () => {
     if (newTaskTitle.trim()) {
-      addTaskMutation.mutate({ title: newTaskTitle.trim() });
+      addTaskMutation.mutate({ title: newTaskTitle.trim(), category: selectedCategory });
     }
   };
 
@@ -69,30 +78,37 @@ const Dashboard = () => {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-6">Task Lists</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {categories.map((category) => (
-          <Card key={category.id}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {category.name}
-              </CardTitle>
-              <div className="h-4 w-4 rounded-full bg-sky-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{category.tasks}</div>
-              <p className="text-xs text-muted-foreground">
-                {category.tasks === 1 ? 'task' : 'tasks'}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold">Tasks</h2>
         <div className="flex space-x-2">
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'outline'}
+            size="icon"
+            onClick={() => setViewMode('list')}
+          >
+            <List className="h-4 w-4" />
+          </Button>
+          <Button
+            variant={viewMode === 'grid' ? 'default' : 'outline'}
+            size="icon"
+            onClick={() => setViewMode('grid')}
+          >
+            <Grid className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="flex space-x-2">
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select a category" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Categories</SelectItem>
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>{category.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Input
             type="text"
             placeholder="New task title"
@@ -101,12 +117,12 @@ const Dashboard = () => {
           />
           <Button onClick={handleAddTask} disabled={addTaskMutation.isLoading}>
             <Plus className="mr-2 h-4 w-4" />
-            {addTaskMutation.isLoading ? 'Adding...' : 'Add New Task'}
+            {addTaskMutation.isLoading ? 'Adding...' : 'Add Task'}
           </Button>
         </div>
       </div>
 
-      <TaskList />
+      <TaskList viewMode={viewMode} selectedCategory={selectedCategory} />
     </div>
   );
 };
